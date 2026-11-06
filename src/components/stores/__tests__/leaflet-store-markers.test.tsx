@@ -30,6 +30,7 @@ const leaflet = vi.hoisted(() => {
       remove: () => void;
       invalidateSize: () => void;
       on: () => void;
+      stop: () => void;
       fitBounds: (bounds: unknown, options?: unknown) => void;
     }
   >();
@@ -39,6 +40,7 @@ const leaflet = vi.hoisted(() => {
       remove: vi.fn(),
       invalidateSize: vi.fn(),
       on: vi.fn(),
+      stop: vi.fn(),
       fitBounds: vi.fn(),
     };
   });

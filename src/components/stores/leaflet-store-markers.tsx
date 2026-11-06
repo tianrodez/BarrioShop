@@ -152,7 +152,10 @@ export function LeafletStoreMarkers({
             (store) => [store.latitude, store.longitude] as LatLngTuple,
           ),
         ).pad(0.35),
-        { maxZoom: KENNEDY_MIN_ZOOM + 2 },
+        // No animation: a pending zoom transition fires after `map.remove()`
+        // when the router unmounts the page and reads `_leaflet_pos` of a pane
+        // that no longer exists.
+        { animate: false, maxZoom: KENNEDY_MIN_ZOOM + 2 },
       );
     }
 
@@ -161,14 +164,22 @@ export function LeafletStoreMarkers({
 
     // The page tree can be hidden and shown again; Leaflet needs to be told the
     // size changed or it keeps a stale viewport.
+    // A queued observer callback (or a pending animation frame) can land after
+    // `map.remove()` and read `_leaflet_pos` of a pane that no longer exists.
+    // Both the flag and `stop()` close that race while the page navigates away.
+    let destroyed = false;
     const observer =
       typeof ResizeObserver === "undefined"
         ? null
-        : new ResizeObserver(() => map.invalidateSize());
+        : new ResizeObserver(() => {
+            if (!destroyed) map.invalidateSize();
+          });
     observer?.observe(node);
 
     return () => {
+      destroyed = true;
       observer?.disconnect();
+      map.stop();
       map.remove();
       node.remove();
       mapRef.current = null;

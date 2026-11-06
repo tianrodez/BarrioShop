@@ -106,14 +106,19 @@ export function LeafletLocationMap({
       changeRef.current(next);
     });
 
+    let destroyed = false;
     const observer =
       typeof ResizeObserver === "undefined"
         ? null
-        : new ResizeObserver(() => map.invalidateSize());
+        : new ResizeObserver(() => {
+            if (!destroyed) map.invalidateSize();
+          });
     observer?.observe(node);
 
     return () => {
+      destroyed = true;
       observer?.disconnect();
+      map.stop();
       map.remove();
       node.remove();
       mapRef.current = null;
