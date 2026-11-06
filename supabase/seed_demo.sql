@@ -1,6 +1,9 @@
 -- DEMO SEED — BarrioShop (content only, prototype fidelity, matches the
 -- Lovable mockup: La Espiga, Fruver El Campo, NEARBUY).
 --
+-- All coordinates sit inside the official Kennedy boundary (OSM relation
+-- 4740229); the first version drifted into Tunjuelito and Bosa.
+--
 -- Demo accounts are provisioned by tests/900_demo_users.sql (run before this
 -- file by both the docker harness and `supabase db reset`). For a hosted
 -- project, run 900_demo_users.sql and this file in order via the SQL editor
@@ -43,25 +46,25 @@ begin
      'Calle 40 Sur # 78-25', 'Castilla', 'Bavaria - Santa Rita',
      'Frente al parque de Castilla', '573001112233',
      'Lun–Dom · 6:00 a.m. – 8:00 p.m.',
-     st_setsrid(st_makepoint(-74.1380, 4.5992), 4326), 'published', true),
+     st_setsrid(st_makepoint(-74.1438, 4.6394), 4326), 'published', true),
     (v_fruver, 'Fruver El Campo', 'Fruver',
      'Frutas y verduras seleccionadas del campo, precio del día.',
      'Carrera 68 # 6-40', 'Kennedy Central', 'Kennedy Central',
      'Cerca a la estación Banderas', '573002223344',
      'Lun–Dom · 6:30 a.m. – 7:30 p.m.',
-     st_setsrid(st_makepoint(-74.1522, 4.5670), 4326), 'published', true),
+     st_setsrid(st_makepoint(-74.1552, 4.6229), 4326), 'published', true),
     (v_tienda, 'NEARBUY', 'Tienda',
      'Todo lo que necesitas para la semana, sin filas y sin comisiones.',
      'Avenida Ciudad de Cali # 12-30', 'Tintal', 'Tintal - Galán',
      'Éxito', '573003334455',
      'Lun–Vie · 8:00 a.m. – 8:00 p.m.',
-     st_setsrid(st_makepoint(-74.1838, 4.5620), 4326), 'published', false),
+     st_setsrid(st_makepoint(-74.1544, 4.6505), 4326), 'published', false),
     (v_tienda, 'Miscelánea La Esquina', 'Miscelánea',
      'Miscelánea de barrio: mercado, lácteos y sorpresas.',
      'Calle 38 Sur # 74-10', 'Bavaria', 'Bavaria - Santa Rita',
      'Esquina del canódromo', '573004445566',
      'Lun–Sáb · 7:00 a.m. – 9:00 p.m.',
-     st_setsrid(st_makepoint(-74.1498, 4.5880), 4326), 'pending', false);
+     st_setsrid(st_makepoint(-74.1322, 4.6377), 4326), 'pending', false);
 
   select id into v_espiga from public.stores where name = 'Panadería La Espiga';
 

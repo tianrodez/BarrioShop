@@ -7,6 +7,11 @@ const nextConfig: NextConfig = {
   /* config options here */
   cacheComponents: true,
   partialPrefetching: true,
+  // Development only. Next 16 blocks every dev resource (client chunks
+  // included) requested from an origin it does not know, so opening the app
+  // at 127.0.0.1 served HTML with no hydration: the search never filtered and
+  // the forms submitted as plain GET. Production builds ignore this list.
+  allowedDevOrigins: ["127.0.0.1"],
   turbopack: {
     rules: {
       "*.css": {
