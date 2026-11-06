@@ -39,9 +39,8 @@ yarn-error.log*
 # local desktop metadata
 .directory
 
-# Project working docs — kept out of git for now (team decision, 2026-11-04).
-# README.md must be tracked before the final delivery (RNF-08).
-README.md
+# Internal working notes — still out of git until the final delivery (RNF-08).
+# README.md is the public entry point and is tracked.
 todo.md
 avances.md
 PRODUCT.md
