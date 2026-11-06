@@ -9,6 +9,10 @@ import { LocationPicker } from "@/components/stores/location-picker";
 import { FileField } from "@/components/ui/file-field";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import {
+  parseStoreFields,
+  type StoreFieldErrors,
+} from "@/lib/store-form-schema";
+import {
   buildStoreInsertPayload,
   requiredVerificationDocuments,
   type FormalizationDocumentType,
@@ -61,6 +65,15 @@ function getFormFields(formData: FormData): StoreFormFields {
   };
 }
 
+function FieldMessage({ id, message }: { id: string; message?: string }) {
+  if (!message) return null;
+  return (
+    <p className="text-xs font-medium text-destructive" id={id}>
+      {message}
+    </p>
+  );
+}
+
 export function StoreForm({
   ownerId,
   initialStore = null,
@@ -93,6 +106,7 @@ export function StoreForm({
     initialStore?.id ?? null,
   );
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<StoreFieldErrors>({});
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [pending, setPending] = useState(false);
 
@@ -142,25 +156,15 @@ export function StoreForm({
     }
 
     const formData = new FormData(event.currentTarget);
-    const fields = getFormFields(formData);
-    if (
-      !fields.name ||
-      !fields.storeType ||
-      !fields.address ||
-      !fields.barrio ||
-      !fields.upz ||
-      !fields.openingHours
-    ) {
-      setErrorMessage("Completa todos los campos obligatorios del perfil.");
-      return;
-    }
-    if (!/^[0-9]{8,15}$/.test(fields.whatsapp.replace(/\D/g, ""))) {
-      setErrorMessage(
-        "Escribe un WhatsApp con indicativo de país y solo dígitos.",
-      );
+    const parsed = parseStoreFields(getFormFields(formData));
+    if (!parsed.success) {
+      setFieldErrors(parsed.errors);
+      setErrorMessage(parsed.firstMessage);
       return;
     }
 
+    const fields = parsed.fields;
+    setFieldErrors({});
     setPending(true);
     setErrorMessage(null);
     setSuccessMessage(null);
@@ -300,86 +304,136 @@ export function StoreForm({
         <div className="flex flex-col gap-2">
           <Label htmlFor="store-name">Nombre de la tienda</Label>
           <Input
+            aria-describedby={fieldErrors.name ? "store-name-error" : undefined}
+            aria-invalid={fieldErrors.name ? true : undefined}
+            defaultValue={initialStore?.name ?? ""}
             id="store-name"
+            maxLength={80}
+            minLength={2}
             name="name"
             required
-            minLength={2}
-            maxLength={80}
-            defaultValue={initialStore?.name ?? ""}
           />
+          <FieldMessage id="store-name-error" message={fieldErrors.name} />
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="store-type">Tipo de comercio</Label>
           <Input
-            id="store-type"
-            name="store_type"
-            required
-            minLength={2}
-            maxLength={40}
-            placeholder="Panadería, tienda, fruver…"
+            aria-describedby={
+              fieldErrors.storeType ? "store-type-error" : undefined
+            }
+            aria-invalid={fieldErrors.storeType ? true : undefined}
             defaultValue={initialStore?.storeType ?? ""}
+            id="store-type"
+            maxLength={40}
+            minLength={2}
+            name="store_type"
+            placeholder="Panadería, tienda, fruver…"
+            required
           />
+          <FieldMessage id="store-type-error" message={fieldErrors.storeType} />
         </div>
         <div className="flex flex-col gap-2 sm:col-span-2">
           <Label htmlFor="store-address">Dirección</Label>
           <Input
+            aria-describedby={
+              fieldErrors.address ? "store-address-error" : undefined
+            }
+            aria-invalid={fieldErrors.address ? true : undefined}
+            defaultValue={initialStore?.address ?? ""}
             id="store-address"
             name="address"
             required
-            defaultValue={initialStore?.address ?? ""}
+          />
+          <FieldMessage
+            id="store-address-error"
+            message={fieldErrors.address}
           />
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="store-barrio">Barrio</Label>
           <Input
+            aria-describedby={
+              fieldErrors.barrio ? "store-barrio-error" : undefined
+            }
+            aria-invalid={fieldErrors.barrio ? true : undefined}
+            defaultValue={initialStore?.barrio ?? ""}
             id="store-barrio"
             name="barrio"
             required
-            defaultValue={initialStore?.barrio ?? ""}
           />
+          <FieldMessage id="store-barrio-error" message={fieldErrors.barrio} />
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="store-upz">UPZ</Label>
           <Input
+            aria-describedby={fieldErrors.upz ? "store-upz-error" : undefined}
+            aria-invalid={fieldErrors.upz ? true : undefined}
+            defaultValue={initialStore?.upz ?? ""}
             id="store-upz"
             name="upz"
             required
-            defaultValue={initialStore?.upz ?? ""}
           />
+          <FieldMessage id="store-upz-error" message={fieldErrors.upz} />
         </div>
         <div className="flex flex-col gap-2 sm:col-span-2">
           <Label htmlFor="store-reference">
             Punto de referencia (opcional)
           </Label>
           <Input
+            aria-describedby={
+              fieldErrors.referencePlace ? "store-reference-error" : undefined
+            }
+            aria-invalid={fieldErrors.referencePlace ? true : undefined}
+            defaultValue={initialStore?.referencePlace ?? ""}
             id="store-reference"
             name="reference_place"
-            defaultValue={initialStore?.referencePlace ?? ""}
+          />
+          <FieldMessage
+            id="store-reference-error"
+            message={fieldErrors.referencePlace}
           />
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="store-whatsapp">WhatsApp</Label>
           <Input
-            id="store-whatsapp"
-            name="whatsapp"
-            type="tel"
-            inputMode="numeric"
+            aria-describedby={
+              fieldErrors.whatsapp
+                ? "store-whatsapp-error"
+                : "store-whatsapp-hint"
+            }
+            aria-invalid={fieldErrors.whatsapp ? true : undefined}
             autoComplete="tel"
-            required
-            placeholder="573001112233"
             defaultValue={initialStore?.whatsapp ?? ""}
+            id="store-whatsapp"
+            inputMode="numeric"
+            name="whatsapp"
+            placeholder="573001112233"
+            required
+            type="tel"
           />
-          <p className="text-sm text-muted-foreground">
+          <FieldMessage
+            id="store-whatsapp-error"
+            message={fieldErrors.whatsapp}
+          />
+          <p className="text-sm text-muted-foreground" id="store-whatsapp-hint">
             Incluye el indicativo del país; por ejemplo, 573001112233.
           </p>
         </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="store-hours">Horario de atención</Label>
           <Input
+            aria-describedby={
+              fieldErrors.openingHours ? "store-hours-error" : undefined
+            }
+            aria-invalid={fieldErrors.openingHours ? true : undefined}
+            defaultValue={initialStore?.openingHours ?? ""}
             id="store-hours"
             name="opening_hours"
             required
-            defaultValue={initialStore?.openingHours ?? ""}
+          />
+          <FieldMessage
+            id="store-hours-error"
+            message={fieldErrors.openingHours}
           />
         </div>
       </section>
@@ -423,17 +477,17 @@ export function StoreForm({
         </div>
         <FileField
           accept="image/jpeg,image/png,image/webp"
-          fileName={photoFile?.name ?? null}
+          existingUrl={photoUrl}
+          file={photoFile}
           hint={
-            photoUrl
-              ? "La tienda ya tiene una foto. Puedes reemplazarla."
-              : "JPG, PNG o WebP; máximo 500 KB."
+            photoUrl && !photoFile
+              ? "La tienda ya tiene una foto. Elige otra solo si quieres reemplazarla."
+              : undefined
           }
           id="store-photo"
           label="Foto de la tienda"
-          onChange={(event) =>
-            setPhotoFile(event.currentTarget.files?.[0] ?? null)
-          }
+          maxSize={STORE_PHOTO_LIMIT}
+          onFile={setPhotoFile}
           required={!photoUrl}
         />
 
@@ -510,16 +564,11 @@ export function StoreForm({
             {!savedDocumentTypes.includes(formalizationDocument) ? (
               <FileField
                 accept="application/pdf,image/jpeg,image/png,image/webp"
-                fileName={
-                  verificationFiles[formalizationDocument]?.name ?? null
-                }
+                file={verificationFiles[formalizationDocument] ?? null}
                 id="formalization-file"
                 label="Documento de formalización"
-                onChange={(event) =>
-                  setVerificationFile(
-                    formalizationDocument,
-                    event.currentTarget.files?.[0],
-                  )
+                onFile={(file) =>
+                  setVerificationFile(formalizationDocument, file ?? undefined)
                 }
                 required
               />
@@ -553,11 +602,11 @@ export function StoreForm({
                       ? "image/jpeg,image/png,image/webp"
                       : "application/pdf,image/jpeg,image/png,image/webp"
                   }
-                  fileName={verificationFiles[docType]?.name ?? null}
+                  file={verificationFiles[docType] ?? null}
                   id={`verification-${docType}`}
                   label={label}
-                  onChange={(event) =>
-                    setVerificationFile(docType, event.currentTarget.files?.[0])
+                  onFile={(file) =>
+                    setVerificationFile(docType, file ?? undefined)
                   }
                   required
                 />

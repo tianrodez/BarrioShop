@@ -17,6 +17,10 @@ import {
   type ProductRecord,
 } from "@/lib/product-catalog-model";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
+import {
+  parseProductFields,
+  type ProductFieldErrors,
+} from "@/lib/product-form-schema";
 
 const PRODUCT_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
@@ -34,6 +38,15 @@ function randomImageName(file: File): string {
   return `${id}.${extension}`;
 }
 
+function FieldMessage({ id, message }: { id: string; message?: string }) {
+  if (!message) return null;
+  return (
+    <p className="text-xs font-medium text-destructive" id={id}>
+      {message}
+    </p>
+  );
+}
+
 export function ProductManager({
   ownerId,
   storeId,
@@ -48,12 +61,14 @@ export function ProductManager({
   const [pending, setPending] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
   const [statusMessage, setStatusMessage] = useState<string | null>(null);
+  const [fieldErrors, setFieldErrors] = useState<ProductFieldErrors>({});
 
   function cancelEditing() {
     setEditingProduct(null);
     setPhotoFile(null);
     setErrorMessage(null);
     setStatusMessage(null);
+    setFieldErrors({});
   }
 
   async function handleSubmit(event: FormEvent<HTMLFormElement>) {
@@ -61,29 +76,28 @@ export function ProductManager({
     if (pending) return;
 
     const formData = new FormData(event.currentTarget);
-    const name = String(formData.get("name") ?? "").trim();
-    const description = String(formData.get("description") ?? "").trim();
-    const category = String(formData.get("category") ?? "").trim();
-    const price = Number(formData.get("price"));
-    const statusValue = formData.get("status");
+    const parsed = parseProductFields({
+      name: String(formData.get("name") ?? ""),
+      category: String(formData.get("category") ?? ""),
+      description: String(formData.get("description") ?? ""),
+      price: formData.get("price"),
+      status: formData.get("status"),
+    });
+    if (!parsed.success) {
+      setFieldErrors(parsed.errors);
+      setErrorMessage(parsed.firstMessage);
+      return;
+    }
 
-    if (!name || !category || !Number.isSafeInteger(price) || price < 1) {
-      setErrorMessage("Completa el nombre, la categoría y un precio válido.");
-      return;
-    }
-    if (
-      name.length < 2 ||
-      name.length > 80 ||
-      category.length < 2 ||
-      category.length > 40
-    ) {
-      setErrorMessage("Revisa el nombre y la categoría del producto.");
-      return;
-    }
-    if (statusValue !== "available" && statusValue !== "sold_out") {
-      setErrorMessage("Selecciona la disponibilidad del producto.");
-      return;
-    }
+    const {
+      name,
+      description,
+      category,
+      price,
+      status: statusValue,
+    } = parsed.values;
+    setFieldErrors({});
+
     if (!editingProduct?.photo_url && !photoFile) {
       setErrorMessage("Agrega una foto del producto.");
       return;
@@ -239,35 +253,56 @@ export function ProductManager({
           <div className="flex flex-col gap-2">
             <Label htmlFor="product-name">Nombre del producto</Label>
             <Input
+              aria-describedby={
+                fieldErrors.name ? "product-name-error" : undefined
+              }
+              aria-invalid={fieldErrors.name ? true : undefined}
+              defaultValue={editingProduct?.name ?? ""}
               id="product-name"
+              maxLength={80}
+              minLength={2}
               name="name"
               required
-              minLength={2}
-              maxLength={80}
-              defaultValue={editingProduct?.name ?? ""}
             />
+            <FieldMessage id="product-name-error" message={fieldErrors.name} />
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="product-category">Categoría</Label>
             <Input
+              aria-describedby={
+                fieldErrors.category ? "product-category-error" : undefined
+              }
+              aria-invalid={fieldErrors.category ? true : undefined}
+              defaultValue={editingProduct?.category ?? ""}
               id="product-category"
+              maxLength={40}
+              minLength={2}
               name="category"
               required
-              minLength={2}
-              maxLength={40}
-              defaultValue={editingProduct?.category ?? ""}
+            />
+            <FieldMessage
+              id="product-category-error"
+              message={fieldErrors.category}
             />
           </div>
           <div className="flex flex-col gap-2">
             <Label htmlFor="product-price">Precio</Label>
             <Input
-              id="product-price"
-              name="price"
-              type="number"
-              min="1"
-              step="1"
-              required
+              aria-describedby={
+                fieldErrors.price ? "product-price-error" : undefined
+              }
+              aria-invalid={fieldErrors.price ? true : undefined}
               defaultValue={editingProduct?.price ?? ""}
+              id="product-price"
+              min="1"
+              name="price"
+              required
+              step="1"
+              type="number"
+            />
+            <FieldMessage
+              id="product-price-error"
+              message={fieldErrors.price}
             />
           </div>
           <div className="flex flex-col gap-2">
@@ -287,28 +322,37 @@ export function ProductManager({
           <div className="flex flex-col gap-2 sm:col-span-2">
             <Label htmlFor="product-description">Descripción (opcional)</Label>
             <textarea
+              aria-describedby={
+                fieldErrors.description
+                  ? "product-description-error"
+                  : undefined
+              }
+              aria-invalid={fieldErrors.description ? true : undefined}
+              className="min-h-24 rounded-xl border bg-background px-3.5 py-2.5 text-base md:text-sm"
+              defaultValue={editingProduct?.description ?? ""}
               id="product-description"
               name="description"
               rows={3}
-              defaultValue={editingProduct?.description ?? ""}
-              className="min-h-24 rounded-xl border bg-background px-3.5 py-2.5 text-base md:text-sm"
+            />
+            <FieldMessage
+              id="product-description-error"
+              message={fieldErrors.description}
             />
           </div>
           <div className="sm:col-span-2">
             <FileField
               accept="image/jpeg,image/png,image/webp"
-              fileName={photoFile?.name ?? null}
+              existingUrl={editingProduct?.photo_url ?? null}
+              file={photoFile}
               hint={
-                "La imagen se optimiza automáticamente para pesar máximo 500 KB." +
+                "Acepta hasta 5 MB; la imagen se optimiza a 500 KB antes de subirla." +
                 (editingProduct?.photo_url
-                  ? " Deja el campo vacío para conservar la foto actual."
+                  ? " Elige otra solo si quieres reemplazar la foto actual."
                   : "")
               }
               id="product-photo"
               label="Foto del producto"
-              onChange={(event) =>
-                setPhotoFile(event.currentTarget.files?.[0] ?? null)
-              }
+              onFile={setPhotoFile}
               required={!editingProduct?.photo_url}
             />
           </div>
