@@ -52,6 +52,8 @@ export function StoreProfile({
           address: store.address,
           latitude: store.point.latitude,
           longitude: store.point.longitude,
+          photo_url: store.photo_url,
+          store_type: store.store_type,
         },
       ]
     : [];

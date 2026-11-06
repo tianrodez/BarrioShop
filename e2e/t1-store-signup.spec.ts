@@ -43,7 +43,7 @@ test("T1: a merchant registers and creates the store with its profile", async ({
   // Leaflet surface is what sets it.
   const map = page.locator(".leaflet-container").first();
   await expect(map).toBeVisible();
-  await map.click({ position: { x: 120, y: 90 } });
+  await map.click();
   await expect(page.getByText(/Punto marcado/)).toBeVisible();
 
   await page.getByLabel("Foto de la tienda").setInputFiles(PHOTO);

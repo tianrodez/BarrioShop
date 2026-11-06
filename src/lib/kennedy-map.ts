@@ -113,9 +113,26 @@ export const KENNEDY_BOUNDS = {
   east: -74.11829,
 } as const;
 
+/**
+ * A small margin around the bounding box. Leaflet's `maxBounds` also clamps the
+ * pan it needs to keep a popup on screen; without it the photo card opens above
+ * the marker and gets clipped by the map container. The margin is still covered
+ * by the mask, so it never reveals a neighbouring locality.
+ */
+const MAX_BOUNDS_MARGIN = 0.02;
+
+/** Six decimals keep the arithmetic from leaking float noise into `maxBounds`. */
+const rounded = (value: number) => Number(value.toFixed(6));
+
 export const KENNEDY_MAX_BOUNDS: [LatLngTuple, LatLngTuple] = [
-  [KENNEDY_BOUNDS.south, KENNEDY_BOUNDS.west],
-  [KENNEDY_BOUNDS.north, KENNEDY_BOUNDS.east],
+  [
+    rounded(KENNEDY_BOUNDS.south - MAX_BOUNDS_MARGIN),
+    rounded(KENNEDY_BOUNDS.west - MAX_BOUNDS_MARGIN),
+  ],
+  [
+    rounded(KENNEDY_BOUNDS.north + MAX_BOUNDS_MARGIN),
+    rounded(KENNEDY_BOUNDS.east + MAX_BOUNDS_MARGIN),
+  ],
 ];
 
 /**

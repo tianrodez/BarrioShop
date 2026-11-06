@@ -14,7 +14,7 @@ const LeafletLocationMap = dynamic(
     loading: () => (
       <div
         role="status"
-        className="flex h-72 items-center justify-center rounded-md border text-sm text-muted-foreground"
+        className="flex h-80 items-center justify-center rounded-xl border border-dashed bg-card text-sm text-muted-foreground"
       >
         Cargando mapa…
       </div>

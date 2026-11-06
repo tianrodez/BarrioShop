@@ -32,10 +32,12 @@ describe("Kennedy map bounds", () => {
   it("orders the corners south-west to north-east", () => {
     expect(KENNEDY_BOUNDS.south).toBeLessThan(KENNEDY_BOUNDS.north);
     expect(KENNEDY_BOUNDS.west).toBeLessThan(KENNEDY_BOUNDS.east);
-    expect(KENNEDY_MAX_BOUNDS).toEqual([
-      [KENNEDY_BOUNDS.south, KENNEDY_BOUNDS.west],
-      [KENNEDY_BOUNDS.north, KENNEDY_BOUNDS.east],
-    ]);
+    // A small margin so Leaflet can pan a popup into view; the mask still
+    // hides everything outside the locality.
+    expect(KENNEDY_MAX_BOUNDS[0][0]).toBeLessThan(KENNEDY_BOUNDS.south);
+    expect(KENNEDY_MAX_BOUNDS[0][1]).toBeLessThan(KENNEDY_BOUNDS.west);
+    expect(KENNEDY_MAX_BOUNDS[1][0]).toBeGreaterThan(KENNEDY_BOUNDS.north);
+    expect(KENNEDY_MAX_BOUNDS[1][1]).toBeGreaterThan(KENNEDY_BOUNDS.east);
   });
 
   it("describes the locality with a real, closed outline", () => {

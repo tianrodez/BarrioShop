@@ -2,6 +2,7 @@
 
 import L from "leaflet";
 import { useEffect, useRef, useState } from "react";
+import { storeTypeIcon } from "@/lib/store-type-icon";
 import {
   isInsideKennedy,
   KENNEDY_BOUNDARY,
@@ -26,6 +27,9 @@ export type StoreMarker = {
   longitude: number;
   address?: string;
   reference_place?: string | null;
+  /** Shown inside the popup, the way the directory card shows it. */
+  photo_url?: string | null;
+  store_type?: string;
 };
 
 type LeafletStoreMarkersProps = {
@@ -42,32 +46,123 @@ function initialCenter(stores: readonly StoreMarker[]): LatLngTuple {
     : KENNEDY_CENTER;
 }
 
+const HOME_ICON =
+  '<svg aria-hidden="true" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 11.5 12 4l9 7.5"/><path d="M5.5 10v9h13v-9"/></svg>';
+
 function popupContent(store: StoreMarker, showProfileLink: boolean) {
-  const root = document.createElement("div");
+  const root = document.createElement("article");
+  root.className = "store-popup";
+
+  if (store.photo_url) {
+    const photo = document.createElement("img");
+    photo.src = store.photo_url;
+    photo.alt = `Foto de ${store.name}`;
+    photo.className = "store-popup__photo";
+    photo.loading = "lazy";
+    photo.width = 232;
+    photo.height = 120;
+    root.appendChild(photo);
+  } else {
+    // Same language as the directory card: a merchant who has not uploaded a
+    // photo yet still gets a recognisable shopfront, not an empty box.
+    const fallback = document.createElement("div");
+    fallback.className = "store-popup__photo store-popup__photo--empty";
+    fallback.setAttribute("aria-hidden", "true");
+    const icon = document.createElement("span");
+    icon.textContent = store.store_type
+      ? storeTypeIcon(store.store_type)
+      : "🏪";
+    fallback.appendChild(icon);
+    root.appendChild(fallback);
+  }
+
+  const body = document.createElement("div");
+  body.className = "store-popup__body";
 
   if (showProfileLink) {
     const link = document.createElement("a");
     link.href = `/tienda/${store.id}`;
     link.textContent = store.name;
-    link.className = "font-medium text-primary underline";
-    root.appendChild(link);
+    link.className = "store-popup__link";
+    body.appendChild(link);
   } else {
     const name = document.createElement("p");
     name.textContent = store.name;
-    name.className = "font-medium";
-    root.appendChild(name);
+    name.className = "store-popup__name";
+    body.appendChild(name);
   }
 
   if (store.address) {
     const detail = document.createElement("p");
-    detail.className = "text-xs text-muted-foreground";
+    detail.className = "store-popup__meta";
     detail.textContent = store.reference_place
       ? `${store.address} · ${store.reference_place}`
       : store.address;
-    root.appendChild(detail);
+    body.appendChild(detail);
   }
 
+  root.appendChild(body);
   return root;
+}
+
+/** Frame every store, or the whole locality when there is none to frame. */
+function frameStores(map: L.Map, stores: readonly StoreMarker[]) {
+  if (stores.length > 1) {
+    map.fitBounds(
+      L.latLngBounds(
+        stores.map((store) => [store.latitude, store.longitude] as LatLngTuple),
+      ).pad(0.35),
+      { animate: true, maxZoom: KENNEDY_MIN_ZOOM + 2 },
+    );
+    return;
+  }
+
+  if (stores.length === 1) {
+    map.setView(
+      [stores[0].latitude, stores[0].longitude],
+      KENNEDY_MIN_ZOOM + 2,
+      { animate: true },
+    );
+    return;
+  }
+
+  map.fitBounds(L.latLngBounds(KENNEDY_BOUNDARY), {
+    animate: true,
+    maxZoom: KENNEDY_MIN_ZOOM + 1,
+  });
+}
+
+/**
+ * A "back to the locality" control. The map already refuses to leave Kennedy,
+ * but after zooming into one shop the neighbour needs one click to see the
+ * whole barrio again without hunting for the right zoom level.
+ */
+function addLocalityControl(map: L.Map, stores: readonly StoreMarker[]) {
+  const LocalityHome = L.Control.extend({
+    options: { position: "topleft" as L.ControlPosition },
+    onAdd() {
+      const container = L.DomUtil.create("div", "leaflet-bar leaflet-control");
+      const button = L.DomUtil.create(
+        "button",
+        "leaflet-control-home",
+        container,
+      );
+      button.type = "button";
+      button.title = "Ver toda la localidad de Kennedy";
+      button.setAttribute("aria-label", "Ver toda la localidad de Kennedy");
+      button.innerHTML = HOME_ICON;
+
+      L.DomEvent.disableClickPropagation(container);
+      L.DomEvent.on(button, "click", (event: Event) => {
+        L.DomEvent.stop(event);
+        frameStores(map, stores);
+      });
+
+      return container;
+    },
+  });
+
+  new LocalityHome().addTo(map);
 }
 
 /**
@@ -120,9 +215,28 @@ export function LeafletStoreMarkers({
       maxZoom: KENNEDY_MAX_ZOOM,
       maxBounds: KENNEDY_MAX_BOUNDS,
       maxBoundsViscosity: 1,
-      scrollWheelZoom: false,
+      // The wheel is the control a neighbour already knows: it zooms the map
+      // while the pointer is over it and leaves the page scroll untouched
+      // everywhere else.
+      scrollWheelZoom: true,
+      wheelPxPerZoomLevel: 80,
+      zoomControl: false,
     });
     mapRef.current = map;
+
+    L.control
+      .zoom({
+        position: "topright",
+        zoomInTitle: "Acercar",
+        zoomOutTitle: "Alejar",
+      })
+      .addTo(map);
+
+    L.control
+      .scale({ position: "bottomleft", imperial: false, maxWidth: 110 })
+      .addTo(map);
+
+    addLocalityControl(map, initialStores);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution:
@@ -198,7 +312,12 @@ export function LeafletStoreMarkers({
         color: "#166534",
         fillOpacity: 0.8,
       })
-        .bindPopup(popupContent(store, showProfileLink))
+        .bindPopup(popupContent(store, showProfileLink), {
+          className: "store-popup-wrapper",
+          maxWidth: 260,
+          minWidth: 232,
+          autoPanPadding: [16, 16],
+        })
         .addTo(layer);
     }
   }, [stores, showProfileLink]);
@@ -207,7 +326,7 @@ export function LeafletStoreMarkers({
     <div className="relative">
       <div
         ref={hostRef}
-        className="h-72 w-full overflow-hidden rounded-md border"
+        className="h-96 w-full overflow-hidden rounded-xl border"
         role="region"
         aria-label={label}
       />

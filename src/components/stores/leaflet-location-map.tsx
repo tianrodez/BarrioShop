@@ -39,11 +39,17 @@ export function LeafletLocationMap({
   const markerRef = useRef<L.CircleMarker | null>(null);
   const changeRef = useRef(onChange);
   const outsideRef = useRef(onOutside);
-  const [center] = useState<LatLngTuple>(() =>
-    point && isInsideKennedy(point)
-      ? [point.latitude, point.longitude]
-      : KENNEDY_CENTER,
-  );
+  // Captured once: the map is recreated only when the field remounts, never
+  // while the merchant is panning or clicking a new point.
+  const [initialView] = useState<{ center: LatLngTuple; zoom: number }>(() => {
+    if (point && isInsideKennedy(point)) {
+      return {
+        center: [point.latitude, point.longitude],
+        zoom: KENNEDY_MIN_ZOOM + 2,
+      };
+    }
+    return { center: KENNEDY_CENTER, zoom: KENNEDY_MIN_ZOOM };
+  });
 
   useEffect(() => {
     changeRef.current = onChange;
@@ -62,15 +68,26 @@ export function LeafletLocationMap({
     host.appendChild(node);
 
     const map = L.map(node, {
-      center,
-      zoom: KENNEDY_MIN_ZOOM + 1,
+      center: initialView.center,
+      zoom: initialView.zoom,
       minZoom: KENNEDY_MIN_ZOOM,
       maxZoom: KENNEDY_MAX_ZOOM,
       maxBounds: KENNEDY_MAX_BOUNDS,
       maxBoundsViscosity: 1,
-      scrollWheelZoom: false,
+      // Same controls as the directory: wheel, buttons, keyboard and pinch.
+      scrollWheelZoom: true,
+      wheelPxPerZoomLevel: 80,
+      zoomControl: false,
     });
     mapRef.current = map;
+
+    L.control
+      .zoom({
+        position: "topright",
+        zoomInTitle: "Acercar",
+        zoomOutTitle: "Alejar",
+      })
+      .addTo(map);
 
     L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       attribution:
@@ -124,7 +141,7 @@ export function LeafletLocationMap({
       mapRef.current = null;
       markerRef.current = null;
     };
-  }, [center]);
+  }, [initialView]);
 
   useEffect(() => {
     const map = mapRef.current;
@@ -145,7 +162,7 @@ export function LeafletLocationMap({
   return (
     <div
       ref={hostRef}
-      className="h-72 w-full overflow-hidden rounded-md border"
+      className="h-80 w-full overflow-hidden rounded-xl border"
       role="region"
       aria-label="Mapa de Kennedy"
     />

@@ -39,32 +39,33 @@ begin
   end if;
 
   insert into public.stores (owner_id, name, store_type, description, address, barrio, upz,
-    reference_place, whatsapp, opening_hours, location, status, is_featured)
+    reference_place, whatsapp, opening_hours, location, status, is_featured, photo_url)
   values
     (v_panadera, 'Panadería La Espiga', 'Panadería',
      'Pan artesanal y recetas de la casa, recién horneado todos los días.',
      'Calle 40 Sur # 78-25', 'Castilla', 'Bavaria - Santa Rita',
      'Frente al parque de Castilla', '573001112233',
      'Lun–Dom · 6:00 a.m. – 8:00 p.m.',
-     st_setsrid(st_makepoint(-74.1438, 4.6394), 4326), 'published', true),
+     st_setsrid(st_makepoint(-74.1438, 4.6394), 4326), 'published', true,
+     '/hero-tienda.jpg'),
     (v_fruver, 'Fruver El Campo', 'Fruver',
      'Frutas y verduras seleccionadas del campo, precio del día.',
      'Carrera 68 # 6-40', 'Kennedy Central', 'Kennedy Central',
      'Cerca a la estación Banderas', '573002223344',
      'Lun–Dom · 6:30 a.m. – 7:30 p.m.',
-     st_setsrid(st_makepoint(-74.1552, 4.6229), 4326), 'published', true),
+     st_setsrid(st_makepoint(-74.1552, 4.6229), 4326), 'published', true, null),
     (v_tienda, 'NEARBUY', 'Tienda',
      'Todo lo que necesitas para la semana, sin filas y sin comisiones.',
      'Avenida Ciudad de Cali # 12-30', 'Tintal', 'Tintal - Galán',
      'Éxito', '573003334455',
      'Lun–Vie · 8:00 a.m. – 8:00 p.m.',
-     st_setsrid(st_makepoint(-74.1544, 4.6505), 4326), 'published', false),
+     st_setsrid(st_makepoint(-74.1544, 4.6505), 4326), 'published', false, null),
     (v_tienda, 'Miscelánea La Esquina', 'Miscelánea',
      'Miscelánea de barrio: mercado, lácteos y sorpresas.',
      'Calle 38 Sur # 74-10', 'Bavaria', 'Bavaria - Santa Rita',
      'Esquina del canódromo', '573004445566',
      'Lun–Sáb · 7:00 a.m. – 9:00 p.m.',
-     st_setsrid(st_makepoint(-74.1322, 4.6377), 4326), 'pending', false);
+     st_setsrid(st_makepoint(-74.1322, 4.6377), 4326), 'pending', false, null);
 
   select id into v_espiga from public.stores where name = 'Panadería La Espiga';
 

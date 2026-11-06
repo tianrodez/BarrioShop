@@ -12,12 +12,15 @@ type MarkerMock = {
 const leaflet = vi.hoisted(() => {
   const captured: {
     options?: Record<string, unknown>;
+    zoomOptions?: Record<string, unknown>;
+    scaleOptions?: Record<string, unknown>;
+    homeControls: number;
     markers: {
       bindPopup: { mock: { calls: unknown[][] } };
       addTo: unknown;
       remove: unknown;
     }[];
-  } = { markers: [] };
+  } = { homeControls: 0, markers: [] };
 
   const layerGroup = { addTo: vi.fn(), clearLayers: vi.fn() };
   layerGroup.addTo.mockReturnValue(layerGroup);
@@ -32,6 +35,7 @@ const leaflet = vi.hoisted(() => {
       on: () => void;
       stop: () => void;
       fitBounds: (bounds: unknown, options?: unknown) => void;
+      setView: (center: unknown, zoom: number, options?: unknown) => void;
     }
   >();
   createMap.mockImplementation((_node, options) => {
@@ -42,6 +46,7 @@ const leaflet = vi.hoisted(() => {
       on: vi.fn(),
       stop: vi.fn(),
       fitBounds: vi.fn(),
+      setView: vi.fn(),
     };
   });
 
@@ -69,6 +74,24 @@ const leaflet = vi.hoisted(() => {
     layerGroup,
     createMap,
     circleMarker,
+    zoomControl: vi.fn((options: Record<string, unknown>) => {
+      captured.zoomOptions = options;
+      return { addTo: vi.fn() };
+    }),
+    scaleControl: vi.fn((options: Record<string, unknown>) => {
+      captured.scaleOptions = options;
+      return { addTo: vi.fn() };
+    }),
+    extendControl: vi.fn(
+      (definition: { onAdd?: () => HTMLElement }) =>
+        class {
+          addTo() {
+            captured.homeControls += 1;
+            definition.onAdd?.();
+            return this;
+          }
+        },
+    ),
     tileLayer: vi.fn<
       (
         url: string,
@@ -96,6 +119,24 @@ vi.mock("leaflet", () => ({
     circleMarker: leaflet.circleMarker,
     layerGroup: () => leaflet.layerGroup,
     latLngBounds: () => ({ pad: () => ({ padded: true }) }),
+    control: {
+      zoom: leaflet.zoomControl,
+      scale: leaflet.scaleControl,
+    },
+    Control: { extend: leaflet.extendControl },
+    DomUtil: {
+      create: (tag: string, className?: string, parent?: HTMLElement) => {
+        const element = document.createElement(tag);
+        if (className) element.className = className;
+        parent?.appendChild(element);
+        return element;
+      },
+    },
+    DomEvent: {
+      disableClickPropagation: vi.fn(),
+      on: vi.fn(),
+      stop: vi.fn(),
+    },
   },
 }));
 
@@ -122,6 +163,9 @@ describe("LeafletStoreMarkers", () => {
     vi.clearAllMocks();
     leaflet.captured.markers = [];
     leaflet.captured.options = undefined;
+    leaflet.captured.zoomOptions = undefined;
+    leaflet.captured.scaleOptions = undefined;
+    leaflet.captured.homeControls = 0;
   });
 
   it("creates a map locked to Kennedy (HU05)", () => {
@@ -130,14 +174,30 @@ describe("LeafletStoreMarkers", () => {
     expect(leaflet.createMap).toHaveBeenCalledTimes(1);
     expect(leaflet.captured.options).toMatchObject({
       maxBounds: [
-        [4.59501, -74.18576],
-        [4.66419, -74.11829],
+        [4.57501, -74.20576],
+        [4.68419, -74.09829],
       ],
       maxBoundsViscosity: 1,
       minZoom: 13,
       maxZoom: 18,
-      scrollWheelZoom: false,
+      scrollWheelZoom: true,
+      zoomControl: false,
     });
+  });
+
+  it("gives the map the controls a neighbour expects", () => {
+    render(<LeafletStoreMarkers stores={[makeStore()]} />);
+
+    expect(leaflet.captured.zoomOptions).toMatchObject({
+      position: "topright",
+      zoomInTitle: "Acercar",
+      zoomOutTitle: "Alejar",
+    });
+    expect(leaflet.captured.scaleOptions).toMatchObject({
+      position: "bottomleft",
+      imperial: false,
+    });
+    expect(leaflet.captured.homeControls).toBe(1);
   });
 
   it("paints everything outside the locality instead of showing it", () => {
@@ -200,6 +260,43 @@ describe("LeafletStoreMarkers", () => {
       .calls[0][0] as HTMLElement;
     expect(popup.textContent).toContain("Panadería La Espiga");
     expect(popup.querySelector("a")).toHaveAttribute("href", "/tienda/store-1");
+  });
+
+  it("puts the store photo inside the popup card", () => {
+    render(
+      <LeafletStoreMarkers
+        stores={[
+          makeStore({ photo_url: "https://cdn.example.com/espiga.jpg" }),
+        ]}
+      />,
+    );
+
+    const popup = leaflet.captured.markers[0].bindPopup.mock
+      .calls[0][0] as HTMLElement;
+    const photo = popup.querySelector("img");
+    expect(photo).toHaveAttribute("src", "https://cdn.example.com/espiga.jpg");
+    expect(photo).toHaveAttribute("alt", "Foto de Panadería La Espiga");
+  });
+
+  it("falls back to the shop type when the store has no photo yet", () => {
+    render(<LeafletStoreMarkers stores={[makeStore()]} />);
+
+    const popup = leaflet.captured.markers[0].bindPopup.mock
+      .calls[0][0] as HTMLElement;
+    expect(popup.querySelector("img")).toBeNull();
+    expect(popup.querySelector(".store-popup__photo--empty")).not.toBeNull();
+  });
+
+  it("asks Leaflet for a card wide enough for the photo", () => {
+    render(<LeafletStoreMarkers stores={[makeStore()]} />);
+
+    const options = leaflet.captured.markers[0].bindPopup.mock
+      .calls[0][1] as Record<string, unknown>;
+    expect(options).toMatchObject({
+      className: "store-popup-wrapper",
+      minWidth: 232,
+      maxWidth: 260,
+    });
   });
 
   it("omits the profile link on a map that already is that profile (HU05 CA4)", () => {
