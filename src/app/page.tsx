@@ -34,13 +34,13 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="relative aspect-[4/3] overflow-hidden rounded-3xl shadow-lg">
+          <div className="relative aspect-[5/4] overflow-hidden rounded-3xl border shadow-lift">
             <img
               alt="Tienda de barrio en Kennedy al atardecer"
               className="h-full w-full object-cover"
-              height={600}
-              src="/hero-tienda.svg"
-              width={800}
+              height={898}
+              src="/hero-tienda.jpg"
+              width={1600}
             />
           </div>
         </div>
