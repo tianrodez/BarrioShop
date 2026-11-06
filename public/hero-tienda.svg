@@ -1,0 +1,61 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 800 600" role="img" aria-labelledby="hero-title">
+  <title id="hero-title">Tienda de barrio en Kennedy al atardecer</title>
+  <defs>
+    <linearGradient id="sky" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#fbe7c2" />
+      <stop offset="0.55" stop-color="#f3be7c" />
+      <stop offset="1" stop-color="#d98a4e" />
+    </linearGradient>
+    <linearGradient id="wall" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#d9a05b" />
+      <stop offset="1" stop-color="#b87a39" />
+    </linearGradient>
+    <linearGradient id="glow" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#ffd98a" />
+      <stop offset="1" stop-color="#f2a944" />
+    </linearGradient>
+  </defs>
+
+  <rect width="800" height="600" fill="url(#sky)" />
+  <circle cx="610" cy="150" r="86" fill="#ffe7b0" opacity="0.75" />
+  <path d="M0 330 L150 250 L300 330 L470 240 L640 330 L800 270 L800 600 L0 600 Z" fill="#b9723e" opacity="0.35" />
+
+  <rect x="70" y="250" width="660" height="350" fill="url(#wall)" />
+
+  <rect x="560" y="285" width="120" height="95" rx="8" fill="#8c4a2f" />
+  <rect x="570" y="295" width="100" height="75" rx="6" fill="#ffc96b" />
+
+  <rect x="60" y="380" width="680" height="16" fill="#7a3b22" />
+  <g fill="#2f6b57">
+    <rect x="60" y="396" width="70" height="48" />
+    <rect x="200" y="396" width="70" height="48" />
+    <rect x="340" y="396" width="70" height="48" />
+    <rect x="480" y="396" width="70" height="48" />
+    <rect x="620" y="396" width="70" height="48" />
+  </g>
+  <g fill="#f4e6ce">
+    <rect x="130" y="396" width="70" height="48" />
+    <rect x="270" y="396" width="70" height="48" />
+    <rect x="410" y="396" width="70" height="48" />
+    <rect x="550" y="396" width="70" height="48" />
+    <rect x="690" y="396" width="50" height="48" />
+  </g>
+
+  <rect x="300" y="444" width="200" height="156" fill="#5e2e1a" />
+  <rect x="312" y="456" width="176" height="144" fill="url(#glow)" opacity="0.9" />
+  <g fill="#b0692f" opacity="0.65">
+    <rect x="330" y="480" width="140" height="8" />
+    <rect x="330" y="520" width="140" height="8" />
+    <rect x="330" y="560" width="140" height="8" />
+  </g>
+
+  <rect x="90" y="470" width="160" height="130" rx="8" fill="#7a3b22" />
+  <g fill="#e8863e">
+    <circle cx="120" cy="470" r="16" />
+    <circle cx="150" cy="462" r="16" />
+    <circle cx="182" cy="470" r="16" />
+    <circle cx="212" cy="462" r="16" />
+  </g>
+
+  <rect y="560" width="800" height="40" fill="#6e3a22" opacity="0.85" />
+</svg>

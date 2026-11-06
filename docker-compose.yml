@@ -1,0 +1,59 @@
+# BarrioShop — hosted app + isolated PostGIS verification harness
+#
+#   docker compose up --abort-on-container-exit --exit-code-from verify
+#     -> migrations apply cleanly and every RLS scenario passes (exit 0).
+#
+#   npm run compose:app             -> app uses .env.hosted.local and runs on
+#     http://localhost:3000
+#
+# The `db` service is plain disposable PostGIS (tmpfs), used only to validate
+# versioned migrations and RLS policies. It is not a local Supabase stack and
+# never serves the app. The app's Auth, API, database, and Storage are hosted.
+
+name: barrioshop-db
+
+services:
+  db:
+    image: postgis/postgis:17-3.4
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: barrioshop_local
+      POSTGRES_DB: barrioshop
+    ports:
+      - "54320:5432"
+    tmpfs:
+      - /var/lib/postgresql/data
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d barrioshop"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  verify:
+    image: postgis/postgis:17-3.4
+    depends_on:
+      db:
+        condition: service_healthy
+    volumes:
+      - ./supabase:/sql:ro
+    entrypoint:
+      [
+        "bash",
+        "-c",
+        "/sql/tests/apply.sh && PGPASSWORD=barrioshop_local psql -h db -U postgres -d barrioshop -v ON_ERROR_STOP=1 -f /sql/tests/rls_test.sql",
+      ]
+
+  app:
+    build:
+      context: .
+      args:
+        NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:-}
+        NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+    ports:
+      - "3000:3000"
+    environment:
+      NEXT_PUBLIC_SUPABASE_URL: ${NEXT_PUBLIC_SUPABASE_URL:-}
+      NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: ${NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY:-}
+      NEXT_PUBLIC_SUPABASE_ANON_KEY: ${NEXT_PUBLIC_SUPABASE_ANON_KEY:-}
+    restart: unless-stopped

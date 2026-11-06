@@ -1,0 +1,16 @@
+node_modules
+.next
+.git
+.gitignore
+Dockerfile
+docker-compose.yml
+.dockerignore
+*.pdf
+odd
+supabase
+README.md
+todo.md
+avances.md
+historias-de-usuario.md
+.env*
+npm-debug.log*
