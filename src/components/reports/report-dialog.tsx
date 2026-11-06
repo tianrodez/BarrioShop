@@ -99,10 +99,13 @@ export function ReportDialog({
       ) : null}
 
       {open && reporterId ? (
-        <form className="flex flex-col gap-2" onSubmit={handleSubmit}>
+        <form
+          className="flex flex-col gap-3 rounded-2xl border bg-surface/60 p-4"
+          onSubmit={handleSubmit}
+        >
           <Label htmlFor={`report-reason-${targetId}`}>Motivo</Label>
           <textarea
-            className="min-h-20 rounded-md border bg-background p-2 text-base md:text-sm"
+            className="min-h-24 rounded-xl border bg-card px-3.5 py-2.5 text-base md:text-sm"
             id={`report-reason-${targetId}`}
             onChange={(event) => setReason(event.currentTarget.value)}
             placeholder={`¿Qué información de esta ${targetLabel} es falsa o engañosa?`}

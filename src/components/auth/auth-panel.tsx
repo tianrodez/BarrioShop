@@ -20,10 +20,15 @@ export function AuthPanel({ defaultTab = "login" }: { defaultTab?: AuthTab }) {
   const [tab, setTab] = useState<AuthTab>(defaultTab);
 
   return (
-    <div className="flex flex-col gap-6">
-      <h1 className="font-heading text-4xl font-extrabold tracking-tight">
-        {HEADINGS[tab]}
-      </h1>
+    <div className="flex flex-col gap-6 rounded-3xl border bg-card p-6 shadow-soft sm:p-8">
+      <div className="flex flex-col gap-1">
+        <h1 className="font-heading text-4xl font-extrabold tracking-tight">
+          {HEADINGS[tab]}
+        </h1>
+        <p className="text-sm text-muted-foreground">
+          Entra para gestionar tu tienda o hacer pedidos en el barrio.
+        </p>
+      </div>
 
       <div
         aria-label="Ingresar o registrarme"
@@ -63,7 +68,7 @@ function AuthTabButton({
       aria-selected={active}
       className={
         active
-          ? "flex-1 rounded-full bg-card px-5 py-2.5 text-sm font-medium shadow-sm"
+          ? "flex-1 rounded-full bg-primary px-5 py-2.5 text-sm font-semibold text-primary-foreground shadow-soft"
           : "flex-1 rounded-full px-5 py-2.5 text-sm font-medium text-muted-foreground transition-colors hover:text-foreground"
       }
       onClick={onClick}

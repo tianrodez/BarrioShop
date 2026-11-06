@@ -5,6 +5,7 @@
 import { useRouter } from "next/navigation";
 import { useState, type FormEvent } from "react";
 import { Button } from "@/components/ui/button";
+import { FileField } from "@/components/ui/file-field";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { compressProductImage } from "@/lib/compress-product-image";
@@ -222,12 +223,18 @@ export function ProductManager({
         key={editingProduct?.id ?? "new"}
         aria-label="Producto"
         onSubmit={handleSubmit}
-        className="flex flex-col gap-4 rounded-lg border p-4"
+        className="flex flex-col gap-5 rounded-2xl border bg-card p-5 shadow-soft sm:p-6"
         noValidate
       >
-        <h2 className="text-lg font-semibold">
-          {editingProduct ? "Editar producto" : "Agregar producto"}
-        </h2>
+        <div className="flex flex-col gap-1">
+          <h2 className="font-heading text-xl font-bold">
+            {editingProduct ? "Editar producto" : "Agregar producto"}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Precio del día, categoría y una foto clara. Lo que cambies se ve en
+            la tienda al instante.
+          </p>
+        </div>
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="flex flex-col gap-2">
             <Label htmlFor="product-name">Nombre del producto</Label>
@@ -269,7 +276,7 @@ export function ProductManager({
               id="product-status"
               name="status"
               defaultValue={editingProduct?.status ?? "available"}
-              className="h-10 rounded-md border bg-background px-3 text-base md:text-sm"
+              className="h-11 rounded-xl border bg-background px-3.5 text-base md:text-sm"
             >
               <option value="available">
                 {productStatusLabel("available")}
@@ -284,32 +291,26 @@ export function ProductManager({
               name="description"
               rows={3}
               defaultValue={editingProduct?.description ?? ""}
-              className="rounded-md border bg-background px-3 py-2 text-base md:text-sm"
+              className="min-h-24 rounded-xl border bg-background px-3.5 py-2.5 text-base md:text-sm"
             />
           </div>
-          <div className="flex flex-col gap-2 sm:col-span-2">
-            <Label htmlFor="product-photo">Foto del producto</Label>
-            <Input
-              id="product-photo"
-              name="photo"
-              type="file"
+          <div className="sm:col-span-2">
+            <FileField
               accept="image/jpeg,image/png,image/webp"
-              required={!editingProduct?.photo_url}
+              fileName={photoFile?.name ?? null}
+              hint={
+                "La imagen se optimiza automáticamente para pesar máximo 500 KB." +
+                (editingProduct?.photo_url
+                  ? " Deja el campo vacío para conservar la foto actual."
+                  : "")
+              }
+              id="product-photo"
+              label="Foto del producto"
               onChange={(event) =>
                 setPhotoFile(event.currentTarget.files?.[0] ?? null)
               }
+              required={!editingProduct?.photo_url}
             />
-            <p className="text-xs text-muted-foreground">
-              La imagen se optimiza automáticamente para pesar máximo 500 KB.
-              {editingProduct?.photo_url
-                ? " Deja el campo vacío para conservar la foto actual."
-                : ""}
-            </p>
-            {photoFile ? (
-              <p className="text-xs text-muted-foreground">
-                Archivo seleccionado: {photoFile.name}
-              </p>
-            ) : null}
           </div>
         </div>
         {errorMessage ? (
@@ -317,8 +318,12 @@ export function ProductManager({
             {errorMessage}
           </p>
         ) : null}
-        <div className="flex flex-wrap gap-3">
-          <Button type="submit" disabled={pending}>
+        <div className="flex flex-wrap justify-end gap-3">
+          <Button
+            className="h-11 rounded-full px-6"
+            type="submit"
+            disabled={pending}
+          >
             {pending
               ? "Guardando…"
               : editingProduct
@@ -327,6 +332,7 @@ export function ProductManager({
           </Button>
           {editingProduct ? (
             <Button
+              className="h-11 rounded-full px-5"
               type="button"
               variant="outline"
               disabled={pending}
@@ -342,7 +348,7 @@ export function ProductManager({
         aria-labelledby="products-heading"
         className="flex flex-col gap-4"
       >
-        <h2 id="products-heading" className="text-lg font-semibold">
+        <h2 id="products-heading" className="font-heading text-xl font-bold">
           Productos ({products.length})
         </h2>
         {statusMessage ? (
@@ -359,7 +365,7 @@ export function ProductManager({
             {products.map((product) => (
               <li
                 key={product.id}
-                className="flex flex-col gap-4 rounded-lg border p-4 sm:flex-row"
+                className="flex flex-col gap-4 rounded-2xl border bg-card p-4 shadow-soft sm:flex-row sm:p-5"
               >
                 {product.photo_url ? (
                   <img
@@ -367,7 +373,7 @@ export function ProductManager({
                     alt={`Foto de ${product.name}`}
                     width={112}
                     height={112}
-                    className="h-28 w-28 rounded-md object-cover"
+                    className="h-28 w-28 shrink-0 rounded-xl object-cover"
                   />
                 ) : null}
                 <div className="flex min-w-0 flex-1 flex-col gap-2">
@@ -375,11 +381,17 @@ export function ProductManager({
                     <h3 className="break-words font-semibold">
                       {product.name}
                     </h3>
-                    <span className="rounded-full bg-muted px-3 py-1 text-xs">
+                    <span
+                      className={
+                        product.status === "sold_out"
+                          ? "rounded-full bg-muted px-3 py-1 text-xs font-medium text-muted-foreground"
+                          : "rounded-full bg-primary/10 px-3 py-1 text-xs font-medium text-primary"
+                      }
+                    >
                       {productStatusLabel(product.status)}
                     </span>
                   </div>
-                  <p className="text-lg font-medium">
+                  <p className="text-xl font-semibold tabular-nums">
                     {formatCOP(product.price)}
                   </p>
                   <p className="break-words text-sm text-muted-foreground">

@@ -90,7 +90,10 @@ export function SignupForm() {
       data-testid="signup-form"
     >
       <div className="flex flex-col gap-2">
-        <Label className="sr-only" htmlFor="full_name">
+        <Label
+          className="text-[13px] font-medium tracking-wide"
+          htmlFor="full_name"
+        >
           Nombre completo
         </Label>
         <Input
@@ -104,7 +107,10 @@ export function SignupForm() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label className="sr-only" htmlFor="email">
+        <Label
+          className="text-[13px] font-medium tracking-wide"
+          htmlFor="email"
+        >
           Correo electrónico
         </Label>
         <Input
@@ -119,7 +125,10 @@ export function SignupForm() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label className="sr-only" htmlFor="password">
+        <Label
+          className="text-[13px] font-medium tracking-wide"
+          htmlFor="password"
+        >
           Contraseña
         </Label>
         <Input

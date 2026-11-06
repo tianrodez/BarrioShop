@@ -62,7 +62,10 @@ export function LoginForm() {
       data-testid="login-form"
     >
       <div className="flex flex-col gap-2">
-        <Label className="sr-only" htmlFor="email">
+        <Label
+          className="text-[13px] font-medium tracking-wide"
+          htmlFor="email"
+        >
           Correo electrónico
         </Label>
         <Input
@@ -77,7 +80,10 @@ export function LoginForm() {
       </div>
 
       <div className="flex flex-col gap-2">
-        <Label className="sr-only" htmlFor="password">
+        <Label
+          className="text-[13px] font-medium tracking-wide"
+          htmlFor="password"
+        >
           Contraseña
         </Label>
         <Input

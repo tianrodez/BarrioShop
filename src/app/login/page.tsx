@@ -9,12 +9,21 @@ export default function LoginPage() {
   return (
     <main className="mx-auto w-full max-w-xl flex-1 px-4 py-12">
       <AuthPanel defaultTab="login" />
-      <p className="mt-10 text-xs text-muted-foreground">
-        Cuentas de demostración locales: <code>panadera@barrioshop.demo</code>,{" "}
-        <code>fruver@barrioshop.demo</code>, <code>tienda@barrioshop.demo</code>
-        , <code>vecina@barrioshop.demo</code> — contraseña{" "}
-        <code>BarrioShop2026!</code>
-      </p>
+      <div className="mt-8 rounded-2xl border border-dashed bg-surface/60 p-4">
+        <p className="text-xs font-semibold tracking-wide text-foreground uppercase">
+          Cuentas de demostración
+        </p>
+        <p className="mt-1.5 text-sm leading-relaxed text-muted-foreground">
+          panadera@barrioshop.demo · fruver@barrioshop.demo ·{" "}
+          tienda@barrioshop.demo · vecina@barrioshop.demo
+        </p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Contraseña:{" "}
+          <code className="rounded-md bg-card px-1.5 py-0.5 font-medium">
+            BarrioShop2026!
+          </code>
+        </p>
+      </div>
     </main>
   );
 }

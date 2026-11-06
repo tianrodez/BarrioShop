@@ -6,6 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { LocationPicker } from "@/components/stores/location-picker";
+import { FileField } from "@/components/ui/file-field";
 import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import {
   buildStoreInsertPayload,
@@ -288,7 +289,14 @@ export function StoreForm({
 
   return (
     <form onSubmit={handleSubmit} className="flex flex-col gap-6" noValidate>
-      <section className="grid gap-4 sm:grid-cols-2">
+      <section className="grid gap-5 rounded-2xl border bg-card p-5 shadow-soft sm:grid-cols-2 sm:p-6">
+        <div className="flex flex-col gap-1 sm:col-span-2">
+          <h2 className="font-heading text-xl font-bold">Datos del negocio</h2>
+          <p className="text-sm text-muted-foreground">
+            Así te encuentran los vecinos: el nombre, dónde estás y cómo te
+            escriben.
+          </p>
+        </div>
         <div className="flex flex-col gap-2">
           <Label htmlFor="store-name">Nombre de la tienda</Label>
           <Input
@@ -376,8 +384,14 @@ export function StoreForm({
         </div>
       </section>
 
-      <section className="flex flex-col gap-3">
-        <h2 className="font-medium">Ubicación</h2>
+      <section className="flex flex-col gap-4 rounded-2xl border bg-card p-5 shadow-soft sm:p-6">
+        <div className="flex flex-col gap-1">
+          <h2 className="font-heading text-xl font-bold">Ubicación</h2>
+          <p className="text-sm text-muted-foreground">
+            Marca el punto exacto de tu local. Solo se puede marcar dentro de
+            Kennedy.
+          </p>
+        </div>
         <LocationPicker point={point} onChange={setPoint} />
         {point ? (
           <div className="flex flex-wrap items-center gap-3 text-sm">
@@ -397,52 +411,82 @@ export function StoreForm({
         ) : null}
       </section>
 
-      <section className="flex flex-col gap-4">
-        <h2 className="font-medium">Foto de la tienda y verificación</h2>
-        <div className="flex flex-col gap-2">
-          <Label htmlFor="store-photo">Foto de la tienda</Label>
-          <Input
-            id="store-photo"
-            type="file"
-            accept="image/jpeg,image/png,image/webp"
-            required={!photoUrl}
-            onChange={(event) =>
-              setPhotoFile(event.currentTarget.files?.[0] ?? null)
-            }
-          />
-          {photoUrl ? (
-            <p className="text-sm text-muted-foreground">
-              La tienda ya tiene una foto. Puedes reemplazarla.
-            </p>
-          ) : (
-            <p className="text-sm text-muted-foreground">
-              JPG, PNG o WebP; máximo 500 KB.
-            </p>
-          )}
+      <section className="flex flex-col gap-5 rounded-2xl border bg-card p-5 shadow-soft sm:p-6">
+        <div className="flex flex-col gap-1">
+          <h2 className="font-heading text-xl font-bold">
+            Foto y verificación
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            Una foto clara de la fachada y el soporte que demuestre que el local
+            existe. Solo lo ve el equipo que revisa la tienda.
+          </p>
         </div>
+        <FileField
+          accept="image/jpeg,image/png,image/webp"
+          fileName={photoFile?.name ?? null}
+          hint={
+            photoUrl
+              ? "La tienda ya tiene una foto. Puedes reemplazarla."
+              : "JPG, PNG o WebP; máximo 500 KB."
+          }
+          id="store-photo"
+          label="Foto de la tienda"
+          onChange={(event) =>
+            setPhotoFile(event.currentTarget.files?.[0] ?? null)
+          }
+          required={!photoUrl}
+        />
 
         <fieldset className="flex flex-col gap-3">
-          <legend className="mb-2 text-sm font-medium">
+          <legend className="mb-1 text-sm font-medium">
             ¿Tu negocio está formalizado?
           </legend>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              name="formalized"
-              checked={formalized}
-              onChange={() => setFormalized(true)}
-            />
-            Sí, está formalizado
-          </label>
-          <label className="flex items-center gap-2 text-sm">
-            <input
-              type="radio"
-              name="formalized"
-              checked={!formalized}
-              onChange={() => setFormalized(false)}
-            />
-            No está formalizado
-          </label>
+          <div className="grid gap-3 sm:grid-cols-2">
+            <label
+              className={
+                formalized
+                  ? "flex cursor-pointer items-start gap-3 rounded-xl border border-primary bg-primary/5 p-3.5 text-sm"
+                  : "flex cursor-pointer items-start gap-3 rounded-xl border bg-background p-3.5 text-sm transition-colors hover:border-primary/40"
+              }
+            >
+              <input
+                aria-label="Sí, está formalizado"
+                type="radio"
+                name="formalized"
+                checked={formalized}
+                className="mt-0.5"
+                onChange={() => setFormalized(true)}
+              />
+              <span className="flex flex-col gap-0.5">
+                <span className="font-medium">Sí, está formalizado</span>
+                <span className="text-xs text-muted-foreground">
+                  RUT o Cámara de Comercio.
+                </span>
+              </span>
+            </label>
+            <label
+              className={
+                !formalized
+                  ? "flex cursor-pointer items-start gap-3 rounded-xl border border-primary bg-primary/5 p-3.5 text-sm"
+                  : "flex cursor-pointer items-start gap-3 rounded-xl border bg-background p-3.5 text-sm transition-colors hover:border-primary/40"
+              }
+            >
+              <input
+                aria-label="No está formalizado"
+                type="radio"
+                name="formalized"
+                checked={!formalized}
+                className="mt-0.5"
+                onChange={() => setFormalized(false)}
+              />
+              <span className="flex flex-col gap-0.5">
+                <span className="font-medium">No está formalizado</span>
+                <span className="text-xs text-muted-foreground">
+                  Recibo de servicio público y foto de la fachada.
+                </span>
+              </span>
+            </label>
+          </div>
         </fieldset>
 
         {formalized ? (
@@ -457,30 +501,28 @@ export function StoreForm({
                     event.currentTarget.value as FormalizationDocumentType,
                   )
                 }
-                className="h-10 rounded-md border bg-background px-3 text-base md:text-sm"
+                className="h-11 rounded-xl border bg-background px-3.5 text-base md:text-sm"
               >
                 <option value="rut">RUT</option>
                 <option value="camara_comercio">Cámara de Comercio</option>
               </select>
             </div>
             {!savedDocumentTypes.includes(formalizationDocument) ? (
-              <div className="flex flex-col gap-2">
-                <Label htmlFor="formalization-file">
-                  Documento de formalización
-                </Label>
-                <Input
-                  id="formalization-file"
-                  type="file"
-                  accept="application/pdf,image/jpeg,image/png,image/webp"
-                  required
-                  onChange={(event) =>
-                    setVerificationFile(
-                      formalizationDocument,
-                      event.currentTarget.files?.[0],
-                    )
-                  }
-                />
-              </div>
+              <FileField
+                accept="application/pdf,image/jpeg,image/png,image/webp"
+                fileName={
+                  verificationFiles[formalizationDocument]?.name ?? null
+                }
+                id="formalization-file"
+                label="Documento de formalización"
+                onChange={(event) =>
+                  setVerificationFile(
+                    formalizationDocument,
+                    event.currentTarget.files?.[0],
+                  )
+                }
+                required
+              />
             ) : (
               <p role="status" className="text-sm text-muted-foreground">
                 El soporte de formalización ya está cargado.
@@ -504,25 +546,21 @@ export function StoreForm({
                   {label}: soporte ya cargado.
                 </p>
               ) : (
-                <div key={docType} className="flex flex-col gap-2">
-                  <Label htmlFor={`verification-${docType}`}>{label}</Label>
-                  <Input
-                    id={`verification-${docType}`}
-                    type="file"
-                    accept={
-                      docType === "fachada"
-                        ? "image/jpeg,image/png,image/webp"
-                        : "application/pdf,image/jpeg,image/png,image/webp"
-                    }
-                    required
-                    onChange={(event) =>
-                      setVerificationFile(
-                        docType,
-                        event.currentTarget.files?.[0],
-                      )
-                    }
-                  />
-                </div>
+                <FileField
+                  key={docType}
+                  accept={
+                    docType === "fachada"
+                      ? "image/jpeg,image/png,image/webp"
+                      : "application/pdf,image/jpeg,image/png,image/webp"
+                  }
+                  fileName={verificationFiles[docType]?.name ?? null}
+                  id={`verification-${docType}`}
+                  label={label}
+                  onChange={(event) =>
+                    setVerificationFile(docType, event.currentTarget.files?.[0])
+                  }
+                  required
+                />
               ),
             )}
           </div>
@@ -540,9 +578,18 @@ export function StoreForm({
         </p>
       ) : null}
 
-      <Button type="submit" disabled={pending}>
-        {pending ? "Guardando tienda…" : "Guardar tienda"}
-      </Button>
+      <div className="sticky bottom-4 z-10 flex flex-wrap items-center justify-between gap-3 rounded-2xl border bg-card/95 p-3 shadow-lift backdrop-blur">
+        <p className="text-sm text-muted-foreground">
+          Al guardar, tu tienda queda en revisión.
+        </p>
+        <Button
+          className="h-11 rounded-full px-7"
+          type="submit"
+          disabled={pending}
+        >
+          {pending ? "Guardando tienda…" : "Guardar tienda"}
+        </Button>
+      </div>
     </form>
   );
 }

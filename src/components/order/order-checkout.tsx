@@ -211,16 +211,25 @@ export function OrderCheckout({
         <fieldset className="flex flex-col gap-3">
           <legend className="text-sm font-medium">Método de pago</legend>
           {PAYMENT_METHODS.map((method) => (
-            <label className="flex items-start gap-2" key={method.id}>
+            <label
+              className={
+                draft.paymentMethod === method.id
+                  ? "flex cursor-pointer items-start gap-3 rounded-xl border border-primary bg-primary/5 p-3.5 text-sm"
+                  : "flex cursor-pointer items-start gap-3 rounded-xl border bg-background p-3.5 text-sm transition-colors hover:border-primary/40"
+              }
+              key={method.id}
+            >
               <input
+                aria-label={method.label}
                 checked={draft.paymentMethod === method.id}
+                className="mt-0.5"
                 name="payment-method"
                 onChange={() => update("paymentMethod", method.id)}
                 type="radio"
                 value={method.id}
               />
-              <span className="flex flex-col">
-                <span>{method.label}</span>
+              <span className="flex flex-col gap-0.5">
+                <span className="font-medium">{method.label}</span>
                 <span className="text-xs text-muted-foreground">
                   {method.hint}
                 </span>

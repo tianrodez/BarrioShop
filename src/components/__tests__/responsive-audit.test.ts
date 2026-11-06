@@ -32,9 +32,9 @@ describe("HU08 CA2 responsive audit", () => {
     }
   });
 
-  it("the formalization select is 40px high like the other selects", () => {
+  it("the formalization select is a 44px touch target like the other controls", () => {
     expect(read("src/components/stores/store-form.tsx")).toMatch(
-      /<select[\s\S]*?className="h-10[^"]*text-base md:text-sm"/,
+      /<select[\s\S]*?className="h-11[^"]*text-base md:text-sm"/,
     );
   });
 
