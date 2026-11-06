@@ -137,6 +137,7 @@ describe("ReportDialog (HU11 CA1)", () => {
       },
     ]);
     expect(screen.getByRole("status")).toHaveTextContent(/quedó registrado/);
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
   });
 
   it("writes a product report against the product, not the store", async () => {
@@ -167,6 +168,48 @@ describe("ReportDialog (HU11 CA1)", () => {
         reason: "El precio que muestra es falso",
       },
     });
+  });
+
+  it("opens a real modal with the reason ready to type", async () => {
+    const user = userEvent.setup();
+    renderDialog();
+
+    await user.click(
+      screen.getByRole("button", { name: "Reportar Panadería La Espiga" }),
+    );
+
+    expect(
+      screen.getByRole("dialog", {
+        name: "¿Qué está mal en Panadería La Espiga?",
+      }),
+    ).toBeVisible();
+    expect(screen.getByLabelText("Motivo")).toHaveFocus();
+  });
+
+  it("counts the characters against the column limit", async () => {
+    const user = userEvent.setup();
+    renderDialog();
+
+    await user.click(
+      screen.getByRole("button", { name: "Reportar Panadería La Espiga" }),
+    );
+    expect(screen.getByText("0/1000")).toBeVisible();
+
+    await user.type(screen.getByLabelText("Motivo"), "falso");
+    expect(screen.getByText("5/1000")).toBeVisible();
+  });
+
+  it("closes with Escape and leaves no report behind", async () => {
+    const user = userEvent.setup();
+    renderDialog();
+
+    await user.click(
+      screen.getByRole("button", { name: "Reportar Panadería La Espiga" }),
+    );
+    await user.keyboard("{Escape}");
+
+    expect(screen.queryByRole("dialog")).not.toBeInTheDocument();
+    expect(inserted).toHaveLength(0);
   });
 
   it("tells the client when the report could not be sent", async () => {
