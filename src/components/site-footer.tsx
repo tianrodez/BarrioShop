@@ -5,6 +5,7 @@ import Link from "next/link";
  * repeats the two promises the product actually keeps: no commission and
  * payment on delivery — nothing about shipping, guarantees or phone support
  * that BarrioShop does not offer.
+ * modificacion aleatoria porque el puto github se pone sensible
  */
 export function SiteFooter() {
   return (

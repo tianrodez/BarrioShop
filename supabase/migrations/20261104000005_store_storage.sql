@@ -29,7 +29,7 @@ set name = excluded.name,
     file_size_limit = excluded.file_size_limit,
     allowed_mime_types = excluded.allowed_mime_types;
 
-alter table storage.objects enable row level security;
+-- alter table storage.objects enable row level security;
 
 drop policy if exists store_photos_insert_owner on storage.objects;
 create policy store_photos_insert_owner
