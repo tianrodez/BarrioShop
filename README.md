@@ -68,11 +68,13 @@ Para una demostración, ejecuta en orden desde el **SQL Editor** del proyecto ho
 1. `supabase/tests/900_demo_users.sql` — crea las cuentas demo.
 2. `supabase/seed_demo.sql` — crea las tiendas y el catálogo de ejemplo.
 
-Son idempotentes. La contraseña de las cuentas demo está en `supabase/tests/900_demo_users.sql`; no las uses en un entorno real.
+Son idempotentes. Las cuentas son `panadera@`, `fruver@`, `tienda@`, `vecina@` (cliente) y `admin@barrioshop.demo` (administrador). Todas usan la misma contraseña demo, definida en `supabase/tests/900_demo_users.sql`; no las uses en un entorno real.
+
+La cuenta `admin@barrioshop.demo` no se anuncia en `/login` para no abrir el panel de administración a cualquier visitante del demo. Sus credenciales están en este README y en el seed.
 
 ### Cuenta de administrador (HU09 CA4)
 
-No hay auto-registro de administradores. Primero crea la cuenta normalmente desde `/registro` y luego promuévela desde el SQL Editor:
+El seed demo ya crea `admin@barrioshop.demo` con rol `administrador`; `vecina@` vuelve a quedar como cliente. No hay que promover nada a mano. Para una cuenta real, primero créala desde `/registro` y luego promuévela desde el SQL Editor:
 
 ```sql
 update public.profiles
