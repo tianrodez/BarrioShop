@@ -7,6 +7,8 @@ export const DEMO = {
   panadera: "panadera@barrioshop.demo",
   fruver: "fruver@barrioshop.demo",
   vecina: "vecina@barrioshop.demo",
+  /** The seeded administrator (HU09 CA4); not advertised on /login. */
+  admin: "admin@barrioshop.demo",
 };
 
 export const PHOTO = join(process.cwd(), "e2e/fixtures/photo.png");

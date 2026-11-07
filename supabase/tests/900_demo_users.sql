@@ -1,6 +1,8 @@
--- LOCAL TEST HARNESS ONLY — demo auth accounts for the RLS suite + seed.
+-- DEMO ACCOUNTS — used by the local harness and by a hosted demo project.
 -- In a real project these exist because people actually signed up
--- (or were created via the Supabase dashboard).
+-- (or were created via the Supabase dashboard). The administrator is the one
+-- exception: HU09 CA4 says the team creates it, and the seed does that here so
+-- a demo never needs a manual promotion.
 --
 -- Seeding auth.users by hand must mirror what GoTrue itself writes, or the
 -- rows can sign up but can never log in:
@@ -17,7 +19,9 @@ insert into auth.users (id, email, encrypted_password, email_confirmed_at, raw_u
   ('a0000000-0000-4000-8000-000000000003', 'tienda@barrioshop.demo',
    extensions.crypt('BarrioShop2026!', extensions.gen_salt('bf', 8)), now(), '{"full_name":"Ana Nearbuy"}'),
   ('a0000000-0000-4000-8000-000000000004', 'vecina@barrioshop.demo',
-   extensions.crypt('BarrioShop2026!', extensions.gen_salt('bf', 8)), now(), '{"full_name":"María Vecina"}')
+   extensions.crypt('BarrioShop2026!', extensions.gen_salt('bf', 8)), now(), '{"full_name":"María Vecina"}'),
+  ('a0000000-0000-4000-8000-000000000005', 'admin@barrioshop.demo',
+   extensions.crypt('BarrioShop2026!', extensions.gen_salt('bf', 8)), now(), '{"full_name":"Admin BarrioShop"}')
 on conflict (id) do update
   set encrypted_password = excluded.encrypted_password,
       email_confirmed_at = now();
@@ -40,3 +44,22 @@ set instance_id = '00000000-0000-0000-0000-000000000000',
     updated_at = now(),
     raw_app_meta_data = coalesce(raw_app_meta_data, '{"provider":"email","providers":["email"]}'::jsonb)
 where email like '%@barrioshop.demo';
+
+-- The on_auth_user_created trigger creates the profile as `cliente`. Promote
+-- the seeded administrator afterwards; auth.uid() is null in the SQL editor
+-- (and in the harness), which the role guard treats as a trusted context.
+insert into public.profiles (id, full_name)
+select id, coalesce(raw_user_meta_data->>'full_name', 'Admin BarrioShop')
+from auth.users
+where email = 'admin@barrioshop.demo'
+on conflict (id) do nothing;
+
+update public.profiles
+set role = 'administrador',
+    full_name = coalesce(nullif(full_name, ''), 'Admin BarrioShop')
+where id = (select id from auth.users where email = 'admin@barrioshop.demo');
+
+-- Keep the demo client a client: the seeded administrator is the only admin.
+update public.profiles
+set role = 'cliente'
+where id = (select id from auth.users where email = 'vecina@barrioshop.demo');

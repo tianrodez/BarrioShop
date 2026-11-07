@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import { useRouter } from "next/navigation";
+import { revalidateStoreViews } from "@/app/panel/actions";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
@@ -68,6 +69,9 @@ export function AdminConsole({
       const { error: rpcError } = await action();
       if (rpcError) throw rpcError;
       onSuccess();
+      // The directory, the home and the store profile cache the old status;
+      // one server action call invalidates all of them for the next visit.
+      await revalidateStoreViews();
       router.refresh();
     } catch {
       setError("No pudimos completar la acción. Intenta de nuevo.");

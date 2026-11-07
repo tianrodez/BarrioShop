@@ -128,11 +128,7 @@ async function PanelBody() {
             Perfil de la tienda · {roleLabel(user.role)}
           </p>
         </div>
-        <StoreVisibilityControl
-          storeId={store.id}
-          ownerId={user.id}
-          status={store.status}
-        />
+        <StoreVisibilityControl storeId={store.id} status={store.status} />
         <Link
           href="/panel/productos"
           className="w-fit text-sm font-medium text-primary underline"

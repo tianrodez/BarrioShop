@@ -43,6 +43,8 @@ export function StoreDirectory({
   barrios,
   initialStores,
 }: StoreDirectoryProps) {
+  // The directory page keys this component by the server snapshot, so a new
+  // `initialStores` remounts it instead of leaving the previous list in state.
   const [stores, setStores] = useState(initialStores);
   const [filters, setFilters] = useState<DirectoryFilters>(
     EMPTY_DIRECTORY_FILTERS,

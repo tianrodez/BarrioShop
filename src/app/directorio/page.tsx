@@ -72,7 +72,17 @@ async function DirectoryBody() {
       ? barrios.data.map((row) => row.barrio)
       : [...new Set(directoryStores.map((store) => store.barrio))];
 
+  // `StoreDirectory` keeps the list in state because the proximity search
+  // replaces it from the browser. Keying it by the server snapshot remounts it
+  // when a store is published, hidden or edited, so coming back from /panel
+  // shows the new list without a hard reload.
+  const directoryKey = JSON.stringify(directoryStores);
+
   return (
-    <StoreDirectory barrios={barrioValues} initialStores={directoryStores} />
+    <StoreDirectory
+      key={directoryKey}
+      barrios={barrioValues}
+      initialStores={directoryStores}
+    />
   );
 }

@@ -68,11 +68,13 @@ Para una demostración, ejecuta en orden desde el **SQL Editor** del proyecto ho
 1. `supabase/tests/900_demo_users.sql` — crea las cuentas demo.
 2. `supabase/seed_demo.sql` — crea las tiendas y el catálogo de ejemplo.
 
-Son idempotentes. La contraseña de las cuentas demo está en `supabase/tests/900_demo_users.sql`; no las uses en un entorno real.
+Son idempotentes. Las cuentas son `panadera@`, `fruver@`, `tienda@`, `vecina@` (cliente) y `admin@barrioshop.demo` (administrador). Todas usan la misma contraseña demo, definida en `supabase/tests/900_demo_users.sql`; no las uses en un entorno real.
+
+La cuenta `admin@barrioshop.demo` no se anuncia en `/login` para no abrir el panel de administración a cualquier visitante del demo. Sus credenciales están en este README y en el seed.
 
 ### Cuenta de administrador (HU09 CA4)
 
-No hay auto-registro de administradores. Primero crea la cuenta normalmente desde `/registro` y luego promuévela desde el SQL Editor:
+El seed demo ya crea `admin@barrioshop.demo` con rol `administrador`; `vecina@` vuelve a quedar como cliente. No hay que promover nada a mano. Para una cuenta real, primero créala desde `/registro` y luego promuévela desde el SQL Editor:
 
 ```sql
 update public.profiles
@@ -89,7 +91,21 @@ En **Authentication → URL Configuration**:
 - **Site URL:** `https://tu-app.vercel.app`
 - **Redirect URLs:** `https://tu-app.vercel.app/**` y, si usas previews, `https://*-TU-EQUIPO.vercel.app/**`
 
-Si tienes activada la confirmación por correo, el enlace de confirmación usa el Site URL. En el proyecto local viene desactivada (`supabase/config.toml`), por eso el registro inicia sesión de inmediato.
+La confirmación de correo está desactivada para las demostraciones, así que el registro crea la sesión de inmediato y no envía correos. Si se vuelve a activar, los enlaces de confirmación usan el Site URL.
+
+### Confirmación de correo (modo demostración)
+
+Para las demostraciones la confirmación de correo está **desactivada** en el proyecto hosted: el registro inicia sesión directamente y no depende de un SMTP. Esto evita el error `email rate limit exceeded` del SMTP integrado y permite crear cuentas nuevas durante una demo.
+
+En el proyecto hosted: **Authentication → Providers → Email → Confirm email: OFF**. En el stack local ya viene así con `enable_confirmations = false` en `supabase/config.toml`.
+
+Es una decisión de prototipo, no de producción abierta al público: sin confirmación, cualquiera puede registrarse con un correo que no controla. Antes de abrir la app a usuarios reales hay que:
+
+1. Configurar un SMTP propio (Resend, SendGrid, Postmark, SES) con el dominio verificado.
+2. Volver a activar **Confirm email** en el Dashboard (o `mailer_autoconfirm: false` en la Management API de Supabase).
+3. Poner `enable_confirmations = true` en `supabase/config.toml` si se usa el stack local.
+
+Las cuentas creadas mientras estaba desactivado quedan confirmadas; las que hayan quedado pendientes de antes no se confirman retroactivamente.
 
 ## Desarrollo local
 
@@ -158,6 +174,7 @@ El último comando levanta un PostGIS desechable (tmpfs) y corre la suite conduc
 4. **Aplica las migraciones** antes del primer uso (sección anterior). Vercel no las ejecuta.
 5. **Configura el Site URL** de Supabase con el dominio de Vercel (sección anterior) y vuelve a desplegar si cambiaste variables `NEXT_PUBLIC_*`.
 6. Si usas dominio propio, agrégalo en Vercel y actualiza el Site URL/Redirect URLs de Supabase.
+7. Para las demos, deja **Confirm email** desactivado (ver “Confirmación de correo”). Si lo activas, configura antes un SMTP propio.
 
 Notas:
 

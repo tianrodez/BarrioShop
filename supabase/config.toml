@@ -225,6 +225,11 @@ enabled = true
 # addresses. If disabled, only the new email is required to confirm.
 double_confirm_changes = true
 # If enabled, users need to confirm their email address before signing in.
+# DEMO DECISION (2026-11): keep this false. The prototype must allow signups
+# without an SMTP provider and without burning the built-in email quota. The
+# hosted project uses the same switch in Dashboard -> Authentication ->
+# Providers -> Email ("Confirm email"). Re-enable it together with a custom
+# SMTP provider before opening the app to real users.
 enable_confirmations = false
 # If enabled, users will need to reauthenticate or have logged in recently to change their password.
 secure_password_change = false
