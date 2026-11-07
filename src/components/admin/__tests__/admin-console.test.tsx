@@ -8,11 +8,16 @@ import {
   type PendingStoreRow,
 } from "@/components/admin/admin-console";
 
-const { rpc } = vi.hoisted(() => ({ rpc: vi.fn() }));
+const { rpc, revalidateStoreViews } = vi.hoisted(() => ({
+  rpc: vi.fn(),
+  revalidateStoreViews: vi.fn(),
+}));
 
 vi.mock("@/lib/supabase/client", () => ({
   createSupabaseBrowserClient: () => ({ rpc }),
 }));
+
+vi.mock("@/app/panel/actions", () => ({ revalidateStoreViews }));
 
 const refresh = vi.fn();
 vi.mock("next/navigation", () => ({
@@ -81,6 +86,7 @@ function renderConsole() {
 beforeEach(() => {
   vi.clearAllMocks();
   rpc.mockResolvedValue({ error: null });
+  revalidateStoreViews.mockResolvedValue(undefined);
 });
 
 describe("AdminConsole", () => {
@@ -116,6 +122,7 @@ describe("AdminConsole", () => {
         screen.queryByText("Miscelánea La Esquina"),
       ).not.toBeInTheDocument(),
     );
+    expect(revalidateStoreViews).toHaveBeenCalledTimes(1);
     expect(refresh).toHaveBeenCalled();
   });
 

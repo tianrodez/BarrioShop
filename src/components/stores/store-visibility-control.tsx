@@ -2,8 +2,8 @@
 
 import { useRouter } from "next/navigation";
 import { useState } from "react";
+import { setStoreVisibility } from "@/app/panel/actions";
 import { Button } from "@/components/ui/button";
-import { createSupabaseBrowserClient } from "@/lib/supabase/client";
 import {
   nextStoreVisibilityStatus,
   storeStatusLabel,
@@ -12,13 +12,11 @@ import {
 
 type StoreVisibilityControlProps = {
   storeId: string;
-  ownerId: string;
   status: StoreStatus;
 };
 
 export function StoreVisibilityControl({
   storeId,
-  ownerId,
   status: initialStatus,
 }: StoreVisibilityControlProps) {
   const router = useRouter();
@@ -32,25 +30,14 @@ export function StoreVisibilityControl({
     setPending(true);
     setError(null);
 
-    const supabase = createSupabaseBrowserClient();
-    const { data, error: updateError } = await supabase
-      .from("stores")
-      .update({ status: nextStatus })
-      .eq("id", storeId)
-      .eq("owner_id", ownerId)
-      .select("id")
-      .maybeSingle<{ id: string }>();
-
+    const result = await setStoreVisibility(storeId, status);
     setPending(false);
-    if (updateError || !data) {
-      setError(
-        updateError?.message ??
-          "No pudimos actualizar la visibilidad de la tienda.",
-      );
+    if (!result.ok) {
+      setError(result.error);
       return;
     }
 
-    setStatus(nextStatus);
+    setStatus(result.status);
     router.refresh();
   }
 
