@@ -593,9 +593,10 @@ begin
   perform test_set_claims(null, null);
   execute 'reset role'; execute 'set role anon';
 
-  -- mode 1: coordinates → nearest first (La Espiga is right next to Castilla's centroid)
+  -- mode 1: coordinates → nearest first (the point the merchant marked for
+  -- La Espiga, not the old invented Castilla centroid)
   select name into first_name
-    from public.search_stores(p_lat => 4.5996, p_lng => -74.1377) limit 1;
+    from public.search_stores(p_lat => 4.6400, p_lng => -74.1430) limit 1;
   if first_name <> 'Panadería La Espiga'
     then raise exception 'TEST FAILED: coord search first = %', first_name; end if;
 
@@ -604,7 +605,7 @@ begin
     select ord, d, lag(d) over (order by ord) as prev
     from (
       select ord, distance_m as d
-      from public.search_stores(p_lat => 4.5996, p_lng => -74.1377)
+      from public.search_stores(p_lat => 4.6400, p_lng => -74.1430)
         with ordinality as t(
           id, name, store_type, barrio, address, reference_place,
           opening_hours, photo_url, is_featured, distance_m,
@@ -625,21 +626,21 @@ begin
 
   -- radius filter: 1500 m around La Espiga finds exactly itself
   select count(*) into n from public.search_stores(
-    p_lat => 4.5992, p_lng => -74.1380, p_radius_m => 1500);
+    p_lat => 4.6400, p_lng => -74.1430, p_radius_m => 1500);
   if n <> 1 then raise exception 'TEST FAILED: radius search returned % stores', n; end if;
 
   -- the radius really cuts: one metre short of a store's own distance drops it
   select floor(min(st_distance(s.location,
-    st_setsrid(st_makepoint(-74.1380, 4.5992), 4326)::geography)))::int
+    st_setsrid(st_makepoint(-74.1430, 4.6400), 4326)::geography)))::int
     into nearest_m
     from public.stores s where s.status = 'published';
   select count(*) into n from public.search_stores(
-    p_lat => 4.5992, p_lng => -74.1380, p_radius_m => nearest_m - 1);
+    p_lat => 4.6400, p_lng => -74.1430, p_radius_m => nearest_m - 1);
   if n <> 0 then
     raise exception 'TEST FAILED: radius % m still returned the nearest store', nearest_m - 1;
   end if;
   select count(*) into n from public.search_stores(
-    p_lat => 4.5992, p_lng => -74.1380, p_radius_m => nearest_m + 1);
+    p_lat => 4.6400, p_lng => -74.1430, p_radius_m => nearest_m + 1);
   if n < 1 then
     raise exception 'TEST FAILED: radius % m excluded the nearest store', nearest_m + 1;
   end if;
